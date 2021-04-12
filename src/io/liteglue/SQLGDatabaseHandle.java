@@ -15,7 +15,9 @@ package io.liteglue;
     if (handle < 0) return (int)(-handle);
 
     dbhandle = handle;
-    return SQLCode.OK; /* 0 */
+
+    tokenizerContext = new SQLGTokenizerContextHandle();
+    return tokenizerContext.register();
   }
 
   @Override
@@ -30,6 +32,11 @@ package io.liteglue;
   public int close() {
     /* check state (should be checked by caller): */
     if (dbhandle == 0) return SQLCode.MISUSE;
+
+    if (tokenizerContext != null) {
+      tokenizerContext.unregister();
+      tokenizerContext = null;
+    }
 
     return SQLiteNative.sqlc_db_close(this.dbhandle);
   }
@@ -68,6 +75,35 @@ package io.liteglue;
     /* check state (should be checked by caller): */
     if (dbhandle == 0) return null; /* illegit value */
     return SQLiteNative.sqlc_db_errmsg_native(dbhandle);
+  }
+
+  private class SQLGTokenizerContextHandle implements SQLTokenizerContextHandle {
+    public int register() {
+      if (!registered) {
+        long handle = SQLiteNative.sqlc_syn_context_create(dbhandle);
+        if (handle < 0) {
+          return (int)(-handle);
+        }
+  
+        synonymContextHandle = handle;
+  
+        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle);
+  
+        registered = true;  
+      }
+      return SQLCode.OK;
+    }
+
+    public void unregister() {
+      if (!registered) {
+        SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
+        synonymContextHandle = 0;
+        registered = false;
+      }
+    }
+
+    private boolean registered = false;
+    private long synonymContextHandle = 0;
   }
 
   // XXX TODO make this reusable:
@@ -211,4 +247,5 @@ package io.liteglue;
   String dbfilename = null;
   int openflags = 0;
   private long dbhandle = 0;
+  private SQLTokenizerContextHandle tokenizerContext = null;
 }
