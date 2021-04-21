@@ -80,14 +80,21 @@ package io.liteglue;
   private class SQLGTokenizerContextHandle implements SQLTokenizerContextHandle {
     public int register() {
       if (!registered) {
-        long handle = SQLiteNative.sqlc_syn_context_create(dbhandle);
+        long handle;
+
+        handle = SQLiteNative.sqlc_syn_context_create(dbhandle);
         if (handle < 0) {
           return (int)(-handle);
         }
-  
         synonymContextHandle = handle;
-  
-        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle);
+
+        handle = SQLiteNative.sqlc_stp_context_create(dbhandle);
+        if (handle < 0) {
+          return (int)(-handle);
+        }
+        stopWordsContextHandle = handle;
+
+        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopWordsContextHandle);
   
         registered = true;  
       }
@@ -97,13 +104,16 @@ package io.liteglue;
     public void unregister() {
       if (!registered) {
         SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
+        SQLiteNative.sqlc_stp_context_delete(stopWordsContextHandle);
         synonymContextHandle = 0;
+        stopWordsContextHandle = 0;
         registered = false;
       }
     }
 
     private boolean registered = false;
     private long synonymContextHandle = 0;
+    private long stopWordsContextHandle = 0;
   }
 
   // XXX TODO make this reusable:
