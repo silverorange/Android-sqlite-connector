@@ -11,10 +11,14 @@ package io.liteglue;
     /* check state (should be checked by caller): */
     if (dbfilename == null || dbhandle != 0) return SQLCode.MISUSE;
 
-    long handle = SQLiteNative.sqlc_db_open(dbfilename, openflags);
-    if (handle < 0) return (int)(-handle);
+    SQLiteResponse response = SQLiteNative.sqlc_db_open(dbfilename, openflags);
+    if (response.getResult() != SQLCode.OK) {
+      return response.getResult();
+    }
 
-    dbhandle = handle;
+    dbhandle = response.getHandle();
+
+    SQLiteNative.sqlc_handle_ct_delete(response);
 
     tokenizerContext = new SQLGTokenizerContextHandle();
     return tokenizerContext.register();
@@ -80,19 +84,25 @@ package io.liteglue;
   private class SQLGTokenizerContextHandle implements SQLTokenizerContextHandle {
     public int register() {
       if (!registered) {
-        long handle;
+        SQLiteResponse response;
 
-        handle = SQLiteNative.sqlc_syn_context_create(dbhandle);
-        if (handle < 0) {
-          return (int)(-handle);
+        response = SQLiteNative.sqlc_syn_context_create(dbhandle);
+        if (response.getResult() != SQLCode.OK) {
+          return response.getResult();
         }
-        synonymContextHandle = handle;
+        synonymContextHandle = response.getHandle();
 
-        handle = SQLiteNative.sqlc_stp_context_create(dbhandle);
-        if (handle < 0) {
-          return (int)(-handle);
+        SQLiteNative.sqlc_handle_ct_delete(response);
+
+        response = SQLiteNative.sqlc_stp_context_create(dbhandle);
+        if (response.getResult() != SQLCode.OK) {
+          SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
+          return response.getResult();
         }
-        stopwordsContextHandle = handle;
+
+        stopwordsContextHandle = response.getHandle();
+
+        SQLiteNative.sqlc_handle_ct_delete(response);
 
         SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopwordsContextHandle);
   
@@ -127,10 +137,15 @@ package io.liteglue;
       /* check state (should be checked by caller): */
       if (sql == null || sthandle != 0) return SQLCode.MISUSE;
 
-      long sh = SQLiteNative.sqlc_db_prepare_st(dbhandle, sql);
-      if (sh < 0) return (int)(-sh);
+      SQLiteResponse response = SQLiteNative.sqlc_db_prepare_st(dbhandle, sql);
+      if (response.getResult() != SQLCode.OK) {
+        return response.getResult();
+      }
 
-      sthandle = sh;
+      sthandle = response.getHandle();
+
+      SQLiteNative.sqlc_handle_ct_delete(response);
+
       return SQLCode.OK; /* 0 */
     }
 
