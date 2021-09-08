@@ -18,8 +18,6 @@ package io.liteglue;
 
     dbhandle = response.getHandle();
 
-    SQLiteNative.sqlc_handle_ct_delete(response);
-
     tokenizerContext = new SQLGTokenizerContextHandle();
     return tokenizerContext.register();
   }
@@ -92,8 +90,6 @@ package io.liteglue;
         }
         synonymContextHandle = response.getHandle();
 
-        SQLiteNative.sqlc_handle_ct_delete(response);
-
         response = SQLiteNative.sqlc_stp_context_create(dbhandle);
         if (response.getResult() != SQLCode.OK) {
           SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
@@ -101,8 +97,6 @@ package io.liteglue;
         }
 
         stopwordsContextHandle = response.getHandle();
-
-        SQLiteNative.sqlc_handle_ct_delete(response);
 
         SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopwordsContextHandle);
   
@@ -143,8 +137,6 @@ package io.liteglue;
       }
 
       sthandle = response.getHandle();
-
-      SQLiteNative.sqlc_handle_ct_delete(response);
 
       return SQLCode.OK; /* 0 */
     }
