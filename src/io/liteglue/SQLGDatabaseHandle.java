@@ -98,7 +98,16 @@ package io.liteglue;
 
         stopwordsContextHandle = response.getHandle();
 
-        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopwordsContextHandle);
+        response = SQLiteNative.sqlc_phr_context_create(dbhandle);
+        if (response.getResult() != SQLCode.OK) {
+          SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
+          SQLiteNative.sqlc_stp_context_delete(stopwordsContextHandle);
+          return response.getResult();
+        }
+
+        phrasesContextHandle = response.getHandle();
+
+        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopwordsContextHandle, phrasesContextHandle);
   
         registered = true;  
       }
@@ -109,8 +118,10 @@ package io.liteglue;
       if (!registered) {
         SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
         SQLiteNative.sqlc_stp_context_delete(stopwordsContextHandle);
+        SQLiteNative.sqlc_phr_context_delete(phrasesContextHandle);
         synonymContextHandle = 0;
         stopwordsContextHandle = 0;
+        phrasesContextHandle = 0;
         registered = false;
       }
     }
@@ -118,6 +129,7 @@ package io.liteglue;
     private boolean registered = false;
     private long synonymContextHandle = 0;
     private long stopwordsContextHandle = 0;
+    private long phrasesContextHandle = 0;
   }
 
   // XXX TODO make this reusable:

@@ -122,8 +122,14 @@ public class SQLiteNative {
   /** Interface to C language function: <br> <code> void sqlc_syn_context_delete(sqlc_handle_t syn_context_h); </code>    */
   public static native void sqlc_syn_context_delete(long syn_context_h);
 
-  /** Interface to C language function: <br> <code> int sqlc_tokenizer_register_all(sqlc_handle_t db, sqlc_handle_t syn_context_h, sqlc_handle_t stp_context_h); </code>    */
-  public static native int sqlc_tokenizer_register_all(long db, long syn_context_h, long stp_context_h);
+  /** Interface to C language function: <br> <code> sqlc_handle_ct *  sqlc_phr_context_create(sqlc_handle_t db); </code>    */
+  public static native SQLiteResponse sqlc_phr_context_create(long db);
+
+  /** Interface to C language function: <br> <code> void sqlc_phr_context_delete(sqlc_handle_t phr_context_h); </code>    */
+  public static native void sqlc_phr_context_delete(long phr_context_h);
+
+  /** Interface to C language function: <br> <code> int sqlc_tokenizer_register_all(sqlc_handle_t db, sqlc_handle_t syn_context_h, sqlc_handle_t stp_context_h, sqlc_handle_t phr_context_h); </code>    */
+  public static native int sqlc_tokenizer_register_all(long db, long syn_context_h, long stp_context_h, long phr_context_h);
 
 
 } // end of class SQLiteNative
