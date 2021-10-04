@@ -82,33 +82,7 @@ package io.liteglue;
   private class SQLGTokenizerContextHandle implements SQLTokenizerContextHandle {
     public int register() {
       if (!registered) {
-        SQLiteResponse response;
-
-        response = SQLiteNative.sqlc_syn_context_create(dbhandle);
-        if (response.getResult() != SQLCode.OK) {
-          return response.getResult();
-        }
-        synonymContextHandle = response.getHandle();
-
-        response = SQLiteNative.sqlc_stp_context_create(dbhandle);
-        if (response.getResult() != SQLCode.OK) {
-          SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
-          return response.getResult();
-        }
-
-        stopwordsContextHandle = response.getHandle();
-
-        response = SQLiteNative.sqlc_phr_context_create(dbhandle);
-        if (response.getResult() != SQLCode.OK) {
-          SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
-          SQLiteNative.sqlc_stp_context_delete(stopwordsContextHandle);
-          return response.getResult();
-        }
-
-        phrasesContextHandle = response.getHandle();
-
-        SQLiteNative.sqlc_tokenizer_register_all(dbhandle, synonymContextHandle, stopwordsContextHandle, phrasesContextHandle);
-  
+        SQLiteNative.sqlc_tokenizer_register_all(dbhandle);
         registered = true;  
       }
       return SQLCode.OK;
@@ -116,20 +90,11 @@ package io.liteglue;
 
     public void unregister() {
       if (!registered) {
-        SQLiteNative.sqlc_syn_context_delete(synonymContextHandle);
-        SQLiteNative.sqlc_stp_context_delete(stopwordsContextHandle);
-        SQLiteNative.sqlc_phr_context_delete(phrasesContextHandle);
-        synonymContextHandle = 0;
-        stopwordsContextHandle = 0;
-        phrasesContextHandle = 0;
         registered = false;
       }
     }
 
     private boolean registered = false;
-    private long synonymContextHandle = 0;
-    private long stopwordsContextHandle = 0;
-    private long phrasesContextHandle = 0;
   }
 
   // XXX TODO make this reusable:
